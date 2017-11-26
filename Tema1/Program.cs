@@ -184,7 +184,7 @@ namespace Tema1
                     Console.WriteLine("AFN : Automatul cu stari finite este nedeterminist si nu are tranzitii epsilon .");
                 else Console.WriteLine("AFD : Automatul cu stari finite este determinist si nu are tranzitii epsilon");
             }
-
+             
 
             // Exercitiu al III-le
             echivalent = new string[multimea_starilor.Count(), alfabetul_limbajului.Count()];
