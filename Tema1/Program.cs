@@ -251,7 +251,7 @@ namespace Tema1
 
             
             // Exercitiu al IV-lea
-
+             
             if (tranzitie_epsilon == true)
             {
                 // afisare automat determinist 
