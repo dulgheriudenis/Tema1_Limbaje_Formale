@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace Tema1
@@ -37,7 +35,8 @@ namespace Tema1
         static List<string> definirea_noii_stari = new List<string>();
 
         // Definirea fisierului de intrare
-        static StreamReader file = new StreamReader(@"C:\Users\Denis\source\repos\Tema1\Tema1\1_in.txt");
+        static StreamReader file;
+        static string cale;
 
         // Metoda de parasare a unui string
         static private List<string> parsare_string(string multime_de_stari)
@@ -386,8 +385,44 @@ namespace Tema1
             return true;
         }
 
+        // Sortare string
+        static private string aranjare(string original)
+        {
+            List<string> descompunere = parsare_string(original);
+            List<string> auxiliar = new List<string>();
+            List<int> indici = new List<int>(descompunere.Count);
+
+            for(int i = 0; i < descompunere.Count; i++)
+            {
+                indici.Add(vreau_index_pentru(descompunere[i]));
+            }
+
+            indici.Sort();
+
+            for (int i = 0; i < descompunere.Count; i++)
+            {
+                auxiliar.Add(multimea_starilor[indici[i]]);
+            }
+
+            return list_to_string(auxiliar); 
+        }
+
+        // Metoda de aranjare a starilor in celula matricii functie de tranzitie a automatului cu stari finite echivalent
+        static private void i_want_to_make_echivalent_beautiful()
+        {
+            for (int i = 0; i < multimea_starilor.Count(); i++)
+                for (int j = 0; j < alfabetul_limbajului.Count(); j++)
+                    if (echivalent[i, j] != "-")
+                        echivalent[i, j] = aranjare(echivalent[i, j]);
+        }
+
         static void Main(string[] args)
         {
+            file = new StreamReader(args[0].ToString());
+            cale = args[1].ToString(); 
+
+            File.WriteAllText(cale, string.Empty);
+
             // Exercitiu I
 
             // Completarea variabelor locale cu valorile citite din fisier pentru Alfabetul limbajului, Multimea starilor , Multimea starilor finale si Starea finala
@@ -424,7 +459,24 @@ namespace Tema1
                     }
                 }
             }
-            
+
+            // Afisarea limbajului
+            foreach (string s in alfabetul_limbajului) File.AppendAllText(cale,s + " "); File.AppendAllText(cale,"\r\n");
+
+            // Afisarea multimii starilor 
+            foreach (string s in multimea_starilor) File.AppendAllText(cale,s + " "); File.AppendAllText(cale,"\r\n");
+
+            // Afisarea multimii starilor finale 
+            foreach (string s in multimea_starilor_finale) File.AppendAllText(cale,s + " "); File.AppendAllText(cale,"\r\n");
+
+            // Afisarea starii initiale 
+            File.AppendAllText(cale,starea_initila); File.AppendAllText(cale,"\r\n");
+
+            // Afisare functie de tranzitie a automatului cu stari finite echivalent
+            for (int i = 0; i < multimea_starilor.Count(); i++, File.AppendAllText(cale, "\r\n"))
+                for (int j = 0; j < alfabetul_limbajului.Count(); j++)
+                    File.AppendAllText(cale,tranzitie[i, j] + " ");
+
 
             // Exercitiu al II-lea
 
@@ -444,18 +496,19 @@ namespace Tema1
             // Identificarea automatului cu stari finite
             if (tranzitie_epsilon == true)
             {
-                if (automat_nedeterminist == true)
-                    Console.WriteLine("AFE : Automatul cu stari finite este nedeterminist si are tranzitii epsilon .");
-                else Console.WriteLine("AFE : Automatul cu stari finite este determinist si are tranzitii epsilon .");
+                File.AppendAllText(cale, "\r\n");
+                File.AppendAllText(cale, "E");
+                File.AppendAllText(cale, "\r\n");
+                File.AppendAllText(cale, "\r\n");
             }
             else
             {
                 if (automat_nedeterminist == true)
-                    Console.WriteLine("AFN : Automatul cu stari finite este nedeterminist si nu are tranzitii epsilon .");
-                else Console.WriteLine("AFD : Automatul cu stari finite este determinist si nu are tranzitii epsilon");
+                { File.AppendAllText(cale, "\r\n"); File.AppendAllText(cale, "F"); File.AppendAllText(cale, "\r\n"); File.AppendAllText(cale, "\r\n"); }
+                else { File.AppendAllText(cale, "\r\n"); File.AppendAllText(cale, "D"); File.AppendAllText(cale, "\r\n"); File.AppendAllText(cale, "\r\n"); }
             }
-             
-
+                      
+            
             // Exercitiu al III-le
             echivalent = new string[multimea_starilor.Count(), alfabetul_limbajului.Count()];
             if (tranzitie_epsilon == true)
@@ -504,7 +557,7 @@ namespace Tema1
                 // Rescrierea elementelor automatului cu stari finite echivalent
                 // Detectarea starilor inutile  
                 bool[] prezenta_stari = new bool[multimea_starilor.Count()];
-                for (int i = 0; i < multimea_starilor.Count(); i++, Console.WriteLine(""))
+                for (int i = 0; i < multimea_starilor.Count(); i++)
                     for (int j = 0; j < alfabetul_limbajului.Count(); j++)
                     {
                         stari_in_care_se_consuma_elementul.Clear();
@@ -536,33 +589,37 @@ namespace Tema1
                 for (int i = 0; i < alfabetul_limbajului.Count(); i++)
                     if (alfabetul_limbajului[i] == "e")
                         alfabetul_limbajului.RemoveAt(i);
+                
 
                 // Afisarea automatului cu stari finale echivalent
 
                 // Afisarea limbajului
-                foreach (string s in alfabetul_limbajului) Console.Write(s + " "); Console.WriteLine("");
+                foreach (string s in alfabetul_limbajului) File.AppendAllText(cale,s + " "); File.AppendAllText(cale,"\r\n");
 
                 // Afisarea multimii starilor 
-                foreach (string s in multimea_starilor) Console.Write(s + " "); Console.WriteLine("");
+                foreach (string s in multimea_starilor) File.AppendAllText(cale,s + " "); File.AppendAllText(cale,"\r\n");
 
                 // Afisarea multimii starilor finale 
-                foreach (string s in multimea_starilor_finale_ale_automatului_echivalent) Console.Write(s + " "); Console.WriteLine("");
+                multimea_starilor_finale_ale_automatului_echivalent = parsare_string(aranjare(list_to_string(multimea_starilor_finale_ale_automatului_echivalent)));
+                foreach (string s in multimea_starilor_finale_ale_automatului_echivalent) File.AppendAllText(cale,s + " "); File.AppendAllText(cale,"\r\n");
 
                 // Afisarea starii initiale 
-                Console.Write(starea_initila); Console.WriteLine("");
-                
+                File.AppendAllText(cale,starea_initila); File.AppendAllText(cale,"\r\n");
+
+                i_want_to_make_echivalent_beautiful();
+
                 // Afisare functie de tranzitie a automatului cu stari finite echivalent
-                for (int i = 0; i < multimea_starilor.Count(); i++, Console.WriteLine(""))
+                for (int i = 0; i < multimea_starilor.Count(); i++,File.AppendAllText(cale, "\r\n"))
                     for (int j = 0; j < alfabetul_limbajului.Count(); j++)
-                        Console.Write(echivalent[i, j] + " "); 
+                        File.AppendAllText(cale,echivalent[i, j] + " "); 
                 
             }
-            else Console.WriteLine("Automatul cu stari finite nu are tranzitii epsilon deci nu se poate face automatul echivalent .");
-
+           // else file_out.WriteLine("Automatul cu stari finite nu are tranzitii epsilon deci nu se poate face automatul echivalent .");
+            
 
             // Exercitiu al IV-lea
             //bool final_stari = false;
-            //int max_size_of_states = 2 ^ multimea_starilor.Count();
+            //int max_size_of_states = 2 ^ multimea_starilor_determinist.Count();
             //determinist = new string[max_size_of_states, alfabetul_limbajului.Count()];
             //List<string> stari_ale_automatului_determinist = new List<string>(); 
             //if (tranzitie_epsilon == true)
@@ -604,7 +661,7 @@ namespace Tema1
 
             //                    if (prezent == false)
             //                        new_states_complete(col, list_to_string(definirea_noii_stari), index_global_determinist, echivalent[rand, col], true) ;
-                                
+
             //                }
 
             //                //definire_new_state(index_global_determinist, "q2_q3", coloana);
@@ -621,9 +678,9 @@ namespace Tema1
             //        }
             //    }
             //}
-            //else Console.WriteLine("Automatul cu stari finite nu are tranzitii epsilon deci nu se poate afisa automatul echivalent deoarece acesta nu exista .");
+            //else file_out.WriteLine("Automatul cu stari finite nu are tranzitii epsilon deci nu se poate afisa automatul echivalent deoarece acesta nu exista .");
 
-            Console.ReadKey();
+            
         }
     }
 }
