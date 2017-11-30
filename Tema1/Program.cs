@@ -103,17 +103,7 @@ namespace Tema1
                     return rand_al_starii;
             return -1;
         }
-
-        // Metoda de cautare a indexului starii curente in matricea starii de tranzitie a automatului determinist
-        static private int din_determinist_vreau_index_pentru(string stare)
-        {
-            int rand_al_starii;
-            for (rand_al_starii = 0; rand_al_starii < multimea_starilor_determinist.Count(); rand_al_starii++)
-                if (stare == multimea_starilor[rand_al_starii])
-                    return rand_al_starii;
-            return -1;
-        }
-
+        
         // Completarea starilor finale ale atomatului echivalent
         static private void completarea_starilor_finale_la_automatul_echivalent(string stare_curenta,int rand_in_automat_echivalent)
         {
@@ -267,20 +257,16 @@ namespace Tema1
             List<int> indici = new List<int>(descompunere.Count);
 
             for(int i = 0; i < descompunere.Count; i++)
-            {
                 indici.Add(vreau_index_pentru(descompunere[i]));
-            }
 
             indici.Sort();
 
             for (int i = 0; i < descompunere.Count; i++)
-            {
                 auxiliar.Add(multimea_starilor[indici[i]]);
-            }
 
             return list_to_string(auxiliar); 
         }
-
+        
         // Metoda de aranjare a starilor in celula matricii functie de tranzitie a automatului cu stari finite echivalent
         static private void i_want_to_make_echivalent_beautiful()
         {
@@ -297,7 +283,7 @@ namespace Tema1
             return true;
         }
 
-        //  Metoda de verificare daca starea data este o stare noua
+        // Metoda de verificare daca starea data este o stare noua
         static private bool state_verify(string stare)
         {
             bool present = false;
@@ -324,6 +310,112 @@ namespace Tema1
             return true;
         }
 
+        // Taierea matricii automatului determinist
+        static private void resize()
+        {
+            string[,] new_matrix = new string[index_global_determinist + 1,alfabetul_limbajului.Count]; 
+
+            for(int i=0;i< index_global_determinist+1; i++)
+            {
+                for(int j = 0; j < alfabetul_limbajului.Count; j++)
+                {
+                    new_matrix[i, j] = determinist[i, j];
+                }
+            }
+
+            Array.Clear(determinist, 0, determinist.Length);
+            determinist = new_matrix; 
+        }
+
+        // Metoda folosita la identificarea starilor finale
+        static private void gasirea_starilor_finale()
+        {
+            List<string> noua_lista_de_stari_finale = new List<string>();
+            List<string> auxiliar = new List<string>();
+
+            foreach (string stare_finala in multimea_starilor_finale_ale_automatului_echivalent)
+                foreach (string stare_din_determinist in multimea_starilor_determinist)
+                {
+                    auxiliar = parsare_string(stare_din_determinist);
+                    foreach (string aux in auxiliar)
+                        if (aux == stare_finala)
+                        {
+                            noua_lista_de_stari_finale.Add(stare_din_determinist);
+                            break;
+                        }
+                }
+
+           var duplicates_eliminate = noua_lista_de_stari_finale.Distinct().ToList();
+
+            noua_lista_de_stari_finale.Clear();
+            noua_lista_de_stari_finale = new List<string>(duplicates_eliminate.Count);
+            
+            noua_lista_de_stari_finale = duplicates_eliminate;
+
+            // Sortarea listei
+            noua_lista_de_stari_finale.Sort((x, y) => string.Compare(x.Length.ToString(), y.Length.ToString()));
+                       
+        }
+
+        // Gasire stare in determinist
+        static private bool gasire_stare(string stare)
+        {
+            for (int i = 0; i < multimea_starilor_determinist.Count; i++)
+                for (int j = 0; j < alfabetul_limbajului.Count; j++)
+                    if (determinist[i, j] == stare)
+                        return true;
+            return false;
+        }
+
+        // Metoda folosita la identificarea starilor inutile
+        static private List<string> gasirea_starilor_inutile()
+        {
+            List<string> stari_inutile = new List<string>();
+            List<bool> prezenta_stare = new List<bool>();
+
+            for (int index = 0; index < multimea_starilor_determinist.Count; index++)
+                if (gasire_stare(multimea_starilor_determinist[index]) == true)
+                    prezenta_stare.Add(true);
+                else prezenta_stare.Add(false);
+
+            for (int index = 0; index < multimea_starilor_determinist.Count; index++)
+                if (multimea_starilor_determinist[index] == starea_initila)
+                    prezenta_stare[index] = true;
+
+                for (int index = 0; index < multimea_starilor_determinist.Count; index++)
+                if (prezenta_stare[index] == false)
+                    stari_inutile.Add(multimea_starilor_determinist[index]);
+
+            return stari_inutile;
+        }
+
+        // Eliminarea starilor inutile din matricea automatului determinist
+        static private void alter_determinist_tranzition_function(int step, string stare_inutila)
+        {
+            string[,] new_matrix = new string[multimea_starilor_determinist.Count() - step, alfabetul_limbajului.Count()];
+            int index_of_useless_state = 0;
+            int index_row_for_new_matrix = -1;
+
+            for (int i = 0; i < multimea_starilor_determinist.Count; i++)
+                if (stare_inutila == multimea_starilor_determinist[i])
+                    index_of_useless_state = i;
+
+            for (int i = 0; i < multimea_starilor_determinist.Count(); i++)
+            {
+                if (i != index_of_useless_state)
+                {
+                    index_row_for_new_matrix++;
+                    for (int j = 0; j < alfabetul_limbajului.Count(); j++)
+                    {
+                        new_matrix[index_row_for_new_matrix, j] = determinist[i, j];
+
+                    }
+                }
+            }
+            Array.Clear(determinist, 0, determinist.Length);
+            determinist = new_matrix;
+        }
+
         static void Main(string[] args)
         {
             file = new StreamReader(args[0].ToString());
@@ -333,7 +425,7 @@ namespace Tema1
 
             // Exercitiu I
 
-            // Completarea variabelor locale cu valorile citite din fisier pentru Alfabetul limbajului, Multimea starilor , Multimea starilor finale si Starea finala
+            // Completarea variabelor locale cu valorile citite din fisier pentru Alfabetul limbajului, Multimea starilor , Multimea starilor finale si Starea intiala
             if ((linie = file.ReadLine()) != null)
             {
                 words = linie.Split(delimiterChar);
@@ -384,8 +476,7 @@ namespace Tema1
             for (int i = 0; i < multimea_starilor.Count(); i++, File.AppendAllText(cale, "\r\n"))
                 for (int j = 0; j < alfabetul_limbajului.Count(); j++)
                     File.AppendAllText(cale,tranzitie[i, j] + " ");
-
-
+            
             // Exercitiu al II-lea
 
             // Verificarea automatului daca are tranzitii epsilon 
@@ -589,6 +680,17 @@ namespace Tema1
                     }
                 }
             }
+
+            resize();
+
+            // Gasirea starilor inutile
+            foreach (string s in gasirea_starilor_inutile())
+                //stergerea starilor inutile din matrice
+                //apeleaza prin foreach metoda de mai jos 
+                alter_determinist_tranzition_function(1, "q2");
+
+            // Identificarea starilor finale
+            gasirea_starilor_finale();
 
         }
     }
