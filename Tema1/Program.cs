@@ -31,7 +31,7 @@ namespace Tema1
 
         static string[,] determinist;
         static List<string> multimea_starilor_determinist = new List<string>();
-        static int index_global_determinist = 0;
+        static int index_global_determinist = -1;
         static List<string> definirea_noii_stari = new List<string>();
 
         // Definirea fisierului de intrare
@@ -237,75 +237,7 @@ namespace Tema1
             }
             return suma_stari_din_echivalent;
         }
-
-        // Metoda recursiva de completare a starilor noi formate
-        static private bool new_states_complete(int coloana,string stare_noua,int index_lipire_coloana_stare_noua,string stare_parinte,bool further)
-        {
-            if (further == true)
-            {
-                if (stare_noua == "-")
-                {
-                    if (coloana == 0)
-                    {
-                        determinist[index_global_determinist, coloana] = "-";
-                        index_global_determinist++;
-                    }
-                    else determinist[index_lipire_coloana_stare_noua, coloana] = "-";
-                    return true;
-                }
-                else
-                {
-                    List<string> lista = parsare_string(stare_noua);
-
-                    if (lista.Count() == 1)
-                    {
-                        if (coloana == 0)
-                        {
-                            determinist[index_global_determinist, coloana] = stare_noua;
-                            index_global_determinist++;
-                        }
-                        else determinist[index_lipire_coloana_stare_noua-1, coloana] = stare_noua;
-                    }
-                    else
-                    {
-                        if (coloana == 0)
-                        {
-                            determinist[index_global_determinist, coloana] = stare_noua;
-                            index_global_determinist++;
-                        }
-                        else determinist[index_lipire_coloana_stare_noua, coloana] = stare_noua;
-
-
-
-                        for (int t = 0; t < alfabetul_limbajului.Count; t++)
-                        {
-                            lista.Clear();
-
-                            lista = definire_new_state(stare_noua, t);
-                            bool prezent = false;
-
-                            foreach (string s in multimea_starilor_determinist)
-                                if (list_to_string(lista) == s)
-                                    prezent = true;
-                            bool go_deep = false;
-                            if (prezent == false)
-                            {
-                                multimea_starilor_determinist.Add(list_to_string(lista));
-                                go_deep = true;
-                            }
-                            new_states_complete(t, list_to_string(lista), index_global_determinist, "", go_deep);
-
-
-
-                        }
-
-                        return true;
-                    }
-                }
-            }
-            return true;
-        }
-
+        
         // Metoda trasnformare list in string
         static private string list_to_string(List<string> lista)
         {
@@ -326,65 +258,7 @@ namespace Tema1
 
             return stare_noua_;
         }
-
-        // Metoda ce completeza recursiv matricia functie de tranzitie pentru automatul determinist 
-        static private bool complete_row_for_determinist(int index_rand_in_echivalent, int coloana, List<string> stari_din_echivalent)
-        {
-            definirea_noii_stari.Clear();
-
-            // Actualizare multime stari determinist
-            // Imi introduce starea din care a plecat automatul cand s-a cerut aceasta metoda in multimea starilor deterministului
-            if (din_determinist_vreau_index_pentru(multimea_starilor[index_rand_in_echivalent]) == -1)
-            {
-                multimea_starilor_determinist.Add(multimea_starilor[index_rand_in_echivalent]);
-            }
-
-            // Daca noua stare nu a mai aparut in multimea de stari 
-            if (din_determinist_vreau_index_pentru(echivalent[index_rand_in_echivalent, coloana]) == -1)
-            {
-                if (stari_din_echivalent.Count() == 1 && stari_din_echivalent[0] == "-")
-                    goto fara_memorare;
-                multimea_starilor_determinist.Add(echivalent[index_rand_in_echivalent, coloana]);
-                fara_memorare:;
-
-                // Pentru stare absenta
-                if (stari_din_echivalent.Count() == 1 && stari_din_echivalent[0] == "-")
-                {
-                    if (coloana == 0)
-                    {
-                        determinist[index_global_determinist, coloana] = "-";
-                        index_global_determinist++;
-                    }
-                    else determinist[index_rand_in_echivalent, coloana] = "-";
-                    return true;
-                }
-                else
-                {
-                    if (stari_din_echivalent.Count() == 1)
-                    {
-                        if (coloana == 0)
-                        {
-                            determinist[index_global_determinist, coloana] = stari_din_echivalent[0];
-                            index_global_determinist++;
-                        }
-                        else determinist[index_rand_in_echivalent, coloana] = stari_din_echivalent[0]; 
-                    }
-                    else
-                    {
-                        if (coloana == 0)
-                        {
-                            determinist[index_global_determinist, coloana] = echivalent[index_rand_in_echivalent, coloana];
-                            index_global_determinist++;
-                        }
-                        else determinist[index_rand_in_echivalent, coloana] = echivalent[index_rand_in_echivalent, coloana];
-                        
-                        return true;
-                    }
-                }
-            }
-            return true;
-        }
-
+        
         // Sortare string
         static private string aranjare(string original)
         {
@@ -414,6 +288,40 @@ namespace Tema1
                 for (int j = 0; j < alfabetul_limbajului.Count(); j++)
                     if (echivalent[i, j] != "-")
                         echivalent[i, j] = aranjare(echivalent[i, j]);
+        }
+
+        // Metoda de a introduce o noua stare in matricea automatului determinist
+        static private bool introduce_stare_in_matrice(int index_in_determinist,string stare,int coloana)
+        {
+            determinist[index_in_determinist, coloana] = stare;
+            return true;
+        }
+
+        //  Metoda de verificare daca starea data este o stare noua
+        static private bool state_verify(string stare)
+        {
+            bool present = false;
+
+            if (stare != "-")
+            {
+                foreach (string s in multimea_starilor_determinist)
+                    if (stare == s)
+                        present = true;
+
+                if (present == false)
+                {
+                    multimea_starilor_determinist.Add(stare);
+                    index_global_determinist++;
+                    for (int coloana = 0; coloana < alfabetul_limbajului.Count(); coloana++)
+                    {
+                        introduce_stare_in_matrice(index_global_determinist,list_to_string(definire_new_state(stare,coloana)), coloana);
+                    }
+                }
+                else return false;
+            }
+            else return false;
+
+            return true;
         }
 
         static void Main(string[] args)
@@ -614,73 +522,74 @@ namespace Tema1
                         File.AppendAllText(cale,echivalent[i, j] + " "); 
                 
             }
-           // else file_out.WriteLine("Automatul cu stari finite nu are tranzitii epsilon deci nu se poate face automatul echivalent .");
-            
+
 
             // Exercitiu al IV-lea
-            //bool final_stari = false;
-            //int max_size_of_states = 2 ^ multimea_starilor_determinist.Count();
-            //determinist = new string[max_size_of_states, alfabetul_limbajului.Count()];
-            //List<string> stari_ale_automatului_determinist = new List<string>(); 
-            //if (tranzitie_epsilon == true)
-            //{
-            //    while(final_stari == false)
-            //    {
-            //        for (int rand = 0; rand < multimea_starilor.Count(); rand++)
-            //        {
-            //            for (int coloana = 0; coloana < alfabetul_limbajului.Count(); coloana++)
-            //            {
-            //                List<string> stari_din_echivalent = new List<string>();
+            bool final_stari = false;
+            int max_size_of_states = (int)(Math.Pow((double)2,(double)multimea_starilor.Count())); 
 
-            //                stari_din_echivalent.Clear();
-            //                stari_din_echivalent = parsare_string(echivalent[rand, coloana]);
+            determinist = new string[max_size_of_states, alfabetul_limbajului.Count()];
+            List<string> stari_ale_automatului_determinist = new List<string>();
+            if (tranzitie_epsilon == true)
+            {
+                while (final_stari == false)
+                {
+                    for (int rand = 0; rand < multimea_starilor.Count(); rand++)
+                    {
+                        
+                        if (multimea_starilor_determinist.Count > 0)
+                        {
+                            bool present = false;
 
-            //                bool present = false;
+                            foreach (string s in multimea_starilor_determinist)
+                                if (multimea_starilor[rand] == s)
+                                    present = true;
 
-            //                if (multimea_starilor_determinist.Count > 0) 
-            //                foreach (string s in multimea_starilor_determinist)
-            //                    if (echivalent[rand, coloana] == s)
-            //                        present = true;
+                            if (present == false)
+                            {
+                                multimea_starilor_determinist.Add(multimea_starilor[rand]);
+                                index_global_determinist++;
+                                for (int coloana = 0; coloana < alfabetul_limbajului.Count(); coloana++)
+                                {
+                                    introduce_stare_in_matrice(index_global_determinist, echivalent[rand, coloana], coloana);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            multimea_starilor_determinist.Add(multimea_starilor[rand]);
+                            index_global_determinist++;
+                            for (int coloana = 0; coloana < alfabetul_limbajului.Count(); coloana++)
+                            {
+                                introduce_stare_in_matrice(index_global_determinist, echivalent[rand, coloana], coloana);
+                            }
+                        }
 
-            //                if (present == false)
-            //                complete_row_for_determinist(rand,coloana, stari_din_echivalent);
-            //                present = false;
+                        bool nu_mai_sunt_stari_noi = false;
 
-            //                for (int col = 0; col < alfabetul_limbajului.Count; col++)
-            //                {
-            //                    if (echivalent[rand, col] == "-")
-            //                    { determinist[rand, coloana] = "-"; break; }
+                        while (nu_mai_sunt_stari_noi == false)
+                        {
+                            int numar_de_stari = multimea_starilor_determinist.Count();
+                            nu_mai_sunt_stari_noi = true;
 
+                            for (int line = 0; line < numar_de_stari; line++)
+                            {
+                                for (int coloana = 0; coloana < alfabetul_limbajului.Count(); coloana++)
+                                {
+                                    if(state_verify(determinist[line, coloana]) == true)
+                                    {
+                                        nu_mai_sunt_stari_noi = false;
+                                    }
+                                }
+                            }
+                            
+                        }
+                        if (rand == multimea_starilor.Count() - 1)
+                            final_stari = true;
+                    }
+                }
+            }
 
-            //                    definirea_noii_stari = definire_new_state(echivalent[rand, col], col);
-            //                    bool prezent = false;
-
-            //                    foreach (string s in multimea_starilor_determinist)
-            //                        if (list_to_string(definirea_noii_stari) == s)
-            //                            prezent = true;
-
-            //                    if (prezent == false)
-            //                        new_states_complete(col, list_to_string(definirea_noii_stari), index_global_determinist, echivalent[rand, col], true) ;
-
-            //                }
-
-            //                //definire_new_state(index_global_determinist, "q2_q3", coloana);
-            //                // se face parcurgerea pe starile din echivalent 
-            //                // se baga in matricea determinist 
-            //                // se apeleaza metoda prin care se verifica daca starea curenta este simpla sau compusa 
-            //                // daca e simpla se intoarce cu simplu si se continua for-ul asta       ^
-            //                // daca nu e compusa se baga in matricea determinist si se se revine la |
-
-            //                //apeleaza metoda ce intoarce randul corespunzator randului din echivalent in determinist rand , coloana 
-            //            }
-            //            if (rand == multimea_starilor.Count() - 1)
-            //                final_stari = true;
-            //        }
-            //    }
-            //}
-            //else file_out.WriteLine("Automatul cu stari finite nu are tranzitii epsilon deci nu se poate afisa automatul echivalent deoarece acesta nu exista .");
-
-            
         }
     }
 }
