@@ -33,6 +33,7 @@ namespace Tema1
         static List<string> multimea_starilor_determinist = new List<string>();
         static int index_global_determinist = -1;
         static List<string> definirea_noii_stari = new List<string>();
+        static List<string> multimea_starilor_finale_ale_automatului_determinist = new List<string>();
 
         // Definirea fisierului de intrare
         static StreamReader file;
@@ -196,11 +197,21 @@ namespace Tema1
                 {
                     if (auxiliar.Count == 1 && auxiliar[0] != "-") 
                     {
-                        if(suma_stari_din_echivalent.Count == 0)
+                        if (suma_stari_din_echivalent.Count == 0)
                             suma_stari_din_echivalent.Add(auxiliar[0]);
-                        else foreach (string s in suma_stari_din_echivalent)
-                            if (s != auxiliar[0])
-                                suma_stari_din_echivalent.Add(auxiliar[0]); 
+                        else
+                        {
+                            int sum = suma_stari_din_echivalent.Count();
+                            bool exist = false;
+                            for (int l = 0; l < sum; l++)
+                            {
+                                if (auxiliar[0] == suma_stari_din_echivalent[l])
+                                    exist = true;
+                            }
+                            if (exist == false)
+                                suma_stari_din_echivalent.Add(auxiliar[0]);
+                            exist = false;
+                        }
                     }
                     else if(auxiliar.Count != 1)
                     {
@@ -353,8 +364,10 @@ namespace Tema1
             noua_lista_de_stari_finale = duplicates_eliminate;
 
             // Sortarea listei
+            noua_lista_de_stari_finale.Sort();
             noua_lista_de_stari_finale.Sort((x, y) => string.Compare(x.Length.ToString(), y.Length.ToString()));
-                       
+
+            multimea_starilor_finale_ale_automatului_determinist = noua_lista_de_stari_finale;
         }
 
         // Gasire stare in determinist
@@ -390,9 +403,9 @@ namespace Tema1
         }
 
         // Eliminarea starilor inutile din matricea automatului determinist
-        static private void alter_determinist_tranzition_function(int step, string stare_inutila)
+        static private void alter_determinist_tranzition_function(string stare_inutila)
         {
-            string[,] new_matrix = new string[multimea_starilor_determinist.Count() - step, alfabetul_limbajului.Count()];
+            string[,] new_matrix = new string[multimea_starilor_determinist.Count() - 1, alfabetul_limbajului.Count()];
             int index_of_useless_state = 0;
             int index_row_for_new_matrix = -1;
 
@@ -412,6 +425,11 @@ namespace Tema1
                     }
                 }
             }
+
+            for (int i = 0; i < multimea_starilor_determinist.Count; i++)
+                if (stare_inutila == multimea_starilor_determinist[i])
+                    multimea_starilor_determinist.RemoveAt(i);
+
             Array.Clear(determinist, 0, determinist.Length);
             determinist = new_matrix;
         }
@@ -683,14 +701,41 @@ namespace Tema1
 
             resize();
 
-            // Gasirea starilor inutile
+            // Gasirea starilor inutile si stergerea starilor inutile din matrice
             foreach (string s in gasirea_starilor_inutile())
-                //stergerea starilor inutile din matrice
-                //apeleaza prin foreach metoda de mai jos 
-                alter_determinist_tranzition_function(1, "q2");
+                alter_determinist_tranzition_function(s);
 
             // Identificarea starilor finale
             gasirea_starilor_finale();
+
+            // Sortarea multimii starilor automatului determinist
+            
+            // Sortarea listei
+            multimea_starilor_determinist.Sort();
+            multimea_starilor_determinist.Sort((x, y) => string.Compare(x.Length.ToString(), y.Length.ToString()));
+
+            File.AppendAllText(cale, "\r\n");
+
+            //Afisarea automatului cu stari finite determinist
+
+            // Afisarea limbajului
+            foreach (string s in alfabetul_limbajului) File.AppendAllText(cale, s + " "); File.AppendAllText(cale, "\r\n");
+            
+            // Afisarea multimii starilor 
+            foreach (string s in multimea_starilor_determinist) File.AppendAllText(cale, s + " "); File.AppendAllText(cale, "\r\n");
+
+            // Afisarea multimii starilor finale 
+            foreach (string s in multimea_starilor_finale_ale_automatului_determinist) File.AppendAllText(cale, s + " "); File.AppendAllText(cale, "\r\n");
+
+            // Afisarea starii initiale 
+            File.AppendAllText(cale, starea_initila); File.AppendAllText(cale, "\r\n");
+
+            // Afisare functie de tranzitie a automatului cu stari finite echivalent
+            for (int i = 0; i < multimea_starilor_determinist.Count(); i++, File.AppendAllText(cale, "\r\n"))
+                for (int j = 0; j < alfabetul_limbajului.Count(); j++)
+                    File.AppendAllText(cale, determinist[i, j] + " "); 
+
+            
 
         }
     }
